@@ -2,7 +2,8 @@
   "name": "laboratory-api",
   "type": "module",
   "scripts": {
-    "mock-server": "tsx watch src/index.ts"
+    "mock-server": "tsx watch index.ts",
+    "start": "tsx index.ts"
   },
   "author": "Lemoncode",
   "license": "MIT",
