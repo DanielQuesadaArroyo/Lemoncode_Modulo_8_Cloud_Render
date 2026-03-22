@@ -1,59 +1,20 @@
-import { Hono } from "hono";
-import { logger } from "hono/logger";
-import { cors } from "hono/cors";
-import { serve } from "@hono/node-server";
-import { characters } from "./mock-data.js";
-import { CharacterListResponse } from "./model.js";
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 
-let db = {
-  characters,
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const app = new Hono();
-app.use(logger());
+const app = express();
+const staticFilesPath = path.resolve(__dirname, "./public");
 
-app.use("/api/*", cors());
+app.use("/", express.static(staticFilesPath));
 
-app.get("/api/character", async (context) => {
-  const response: CharacterListResponse = {
-    info: {
-      count: db.characters.length,
-    },
-    results: db.characters,
-  };
-  return context.json(response);
+app.get(/(.*)/, (req, res) => {
+  res.sendFile(path.resolve(staticFilesPath, "index.html"));
 });
 
-app.get("/api/character/:id", (context) => {
-  return context.json(
-    db.characters.find((c) => c.id === Number(context.req.param("id"))),
-  );
-});
-
-app.post("/api/character", async (context) => {
-  const character = await context.req.json();
-  const id = Math.max(...db.characters.map((c) => c.id)) + 1;
-  db.characters.push({ ...character, id });
-  return context.json({ ...character, id }, 201);
-});
-
-app.put("/api/character/:id", async (context) => {
-  const id = Number(context.req.param("id"));
-  const character = await context.req.json();
-  console.log(character);
-  db.characters = db.characters.map((c) =>
-    c.id === id ? { ...c, ...character } : c,
-  );
-  console.log(db.characters);
-  return context.body(null, 204);
-});
-
-app.delete("/api/character/:id", (context) => {
-  const id = Number(context.req.param("id"));
-  db.characters = db.characters.filter((c) => c.id !== id);
-  return context.body(null, 204);
-});
-
-serve({ fetch: app.fetch, port: 3000 }, (info) => {
-  console.log(`API running on ${info.port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
